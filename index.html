@@ -34,45 +34,34 @@
     </div>
 
     <script>
-        const responses = {
-            "не армується": "Дрон не армується? Перевірте: 1. RX зв'язок (binding). 2. Канали мапінг. 3. Throttle на нулі. 4. CPU load. Використовуйте beeper для кодів помилок. Джерело: Betaflight FAQ.",
-            "армування": "Для армування: Призначте свіч на AUX1 в Modes tab Betaflight. Діапазон 1000-2000.",
-            "мотор гріється": "Мотор гріється? Причини: Неправильний tuning, prop mismatch, over-throttling, недостатнє охолодження. Перевірте thrust tests. Джерело: Mepsking guide.",
-            "відео шум": "Шум у відеопоток? Додайте capacitor 25V 200uF на батарею. Перевірте wiring VTX і camera. Джерело: GetFPV troubleshooting.",
-            "death roll": "Death roll? Перевірте ESC/motor пошкодження, wiring, motor timing (збільште для torque). Оновіть ESC firmware. Джерело: GetFPV.",
-            "pid tuning": "Для PID tuning: Використовуйте Blackbox logs в PIDToolBox. Налаштуйте filters спочатку, потім PID для стабільності. Джерело: Oscar Liang guide.",
-            "запчастини": "Запчастини для FPV: Propellers (DJI Quick-Release), Batteries (LiPo 6S), Motors, ESCs. Використовуйте genuine parts. Список: Frame, Motors, Props, FC, ESC, RX, VTX, Camera.",
-            "betaflight": "Betaflight setup: Flash firmware via Configurator. Встановіть drivers (STM VCP). Налаштуйте modes: ARM, ACRO, ANGLE. Enable accelerometer для Angle/Horizon.",
-            "dji fpv": "Для DJI FPV: Перевірте battery level, calibrate compass/IMU. Оновіть firmware via DJI Fly. Не летіть у вітер >13.8 m/s.",
-            "default": "Вибачте, я не знаю відповіді на це питання. Спробуйте описати проблему детальніше, наприклад: 'мотор не крутиться' або 'відео чорне'."
-        };
+    async function sendMessage() {
+        const input = document.getElementById("userInput");
+        const message = input.value.trim();
+        if (!message) return;
 
-        function sendMessage() {
-            const input = document.getElementById("userInput");
-            const message = input.value.trim().toLowerCase();
-            if (!message) return;
+        const messages = document.getElementById("messages");
+        messages.innerHTML += `<div class="message user">${message}</div>`;
+        input.value = "";
 
-            const messages = document.getElementById("messages");
-            messages.innerHTML += `<div class="message user">${input.value}</div>`;
-            input.value = "";
-
-            let response = responses["default"];
-            for (let key in responses) {
-                if (message.includes(key)) {
-                    response = responses[key];
-                    break;
-                }
-            }
-
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            });
+            const data = await response.json();
             setTimeout(() => {
-                messages.innerHTML += `<div class="message bot">${response}</div>`;
+                messages.innerHTML += `<div class="message bot">${data.reply || 'Помилка відповіді'}</div>`;
                 messages.scrollTop = messages.scrollHeight;
             }, 500);
+        } catch (error) {
+            messages.innerHTML += `<div class="message bot">Помилка: Не можу підключитися до ШІ.</div>`;
         }
+    }
 
-        document.getElementById("userInput").addEventListener("keypress", function(e) {
-            if (e.key === "Enter") sendMessage();
-        });
-    </script>
+    document.getElementById("userInput").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") sendMessage();
+    });
+</script>
 </body>
 </html>
