@@ -25,9 +25,8 @@ app.post('/api/chat', async (req, res) => {
   if (!message) return res.status(400).json({ error: 'Повідомлення порожнє' });
 
   try {
-    const result = await model.generateContent([
-      { role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\nКористувач: ' + message }] }
-    ]);
+    const prompt = SYSTEM_PROMPT + '\n\nКористувач: ' + message;
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     res.json({ reply: text });
