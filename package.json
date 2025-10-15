@@ -1,0 +1,13 @@
+{
+  "name": "fpv-drone-chat",
+  "version": "1.0.0",
+  "description": "FPV Drone Support Chat with Gemini",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "@google/generative-ai": "^0.2.1"
+  }
+}
