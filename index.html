@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Технічна Підтримка для FPV Дронів</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .header { background-color: #333; color: white; padding: 20px; text-align: center; }
+        .chat-container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .chat-messages { height: 400px; overflow-y: scroll; padding: 10px; border-bottom: 1px solid #ddd; }
+        .message { margin-bottom: 10px; padding: 8px; border-radius: 5px; }
+        .user { background-color: #007bff; color: white; text-align: right; }
+        .bot { background-color: #e9ecef; color: #333; }
+        .input-area { display: flex; padding: 10px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; margin-left: 10px; cursor: pointer; }
+        @media (max-width: 600px) { .input-area { flex-direction: column; } button { margin-left: 0; margin-top: 10px; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ШІ Підтримка для FPV Дронів</h1>
+        <p>Запитайте про запчастини, ПЗ, технічну підтримку та дебаг</p>
+    </div>
+    <div class="chat-container">
+        <div class="chat-messages" id="messages">
+            <div class="message bot">Привіт! Я ШІ-помічник для FPV дронів. Як я можу допомогти? (Наприклад: "Дрон не армується", "Мотор гріється")</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Введіть ваше питання...">
+            <button onclick="sendMessage()">Надіслати</button>
+        </div>
+    </div>
+
+    <script>
+        const responses = {
+            "не армується": "Дрон не армується? Перевірте: 1. RX зв'язок (binding). 2. Канали мапінг. 3. Throttle на нулі. 4. CPU load. Використовуйте beeper для кодів помилок. Джерело: Betaflight FAQ.",
+            "армування": "Для армування: Призначте свіч на AUX1 в Modes tab Betaflight. Діапазон 1000-2000.",
+            "мотор гріється": "Мотор гріється? Причини: Неправильний tuning, prop mismatch, over-throttling, недостатнє охолодження. Перевірте thrust tests. Джерело: Mepsking guide.",
+            "відео шум": "Шум у відеопоток? Додайте capacitor 25V 200uF на батарею. Перевірте wiring VTX і camera. Джерело: GetFPV troubleshooting.",
+            "death roll": "Death roll? Перевірте ESC/motor пошкодження, wiring, motor timing (збільште для torque). Оновіть ESC firmware. Джерело: GetFPV.",
+            "pid tuning": "Для PID tuning: Використовуйте Blackbox logs в PIDToolBox. Налаштуйте filters спочатку, потім PID для стабільності. Джерело: Oscar Liang guide.",
+            "запчастини": "Запчастини для FPV: Propellers (DJI Quick-Release), Batteries (LiPo 6S), Motors, ESCs. Використовуйте genuine parts. Список: Frame, Motors, Props, FC, ESC, RX, VTX, Camera.",
+            "betaflight": "Betaflight setup: Flash firmware via Configurator. Встановіть drivers (STM VCP). Налаштуйте modes: ARM, ACRO, ANGLE. Enable accelerometer для Angle/Horizon.",
+            "dji fpv": "Для DJI FPV: Перевірте battery level, calibrate compass/IMU. Оновіть firmware via DJI Fly. Не летіть у вітер >13.8 m/s.",
+            "default": "Вибачте, я не знаю відповіді на це питання. Спробуйте описати проблему детальніше, наприклад: 'мотор не крутиться' або 'відео чорне'."
+        };
+
+        function sendMessage() {
+            const input = document.getElementById("userInput");
+            const message = input.value.trim().toLowerCase();
+            if (!message) return;
+
+            const messages = document.getElementById("messages");
+            messages.innerHTML += `<div class="message user">${input.value}</div>`;
+            input.value = "";
+
+            let response = responses["default"];
+            for (let key in responses) {
+                if (message.includes(key)) {
+                    response = responses[key];
+                    break;
+                }
+            }
+
+            setTimeout(() => {
+                messages.innerHTML += `<div class="message bot">${response}</div>`;
+                messages.scrollTop = messages.scrollHeight;
+            }, 500);
+        }
+
+        document.getElementById("userInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") sendMessage();
+        });
+    </script>
+</body>
+</html>
