@@ -44,3 +44,59 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Сервер на http://localhost:${PORT}`);
 });
+
+const fs = require('fs');
+const pdf = require('pdf-parse');
+
+// Функція для читання PDF
+async function extractFromPDF(pdfPath, searchTerms) {
+  try {
+    const dataBuffer = fs.readFileSync(pdfPath);
+    const data = await pdf(dataBuffer);
+    const text = data.text.toLowerCase();
+    let relevant = '';
+    searchTerms.forEach(term => {
+      const index = text.indexOf(term.toLowerCase());
+      if (index !== -1) {
+        // Бере ~200 символів навколо терміну
+        relevant += text.substring(Math.max(0, index - 100), index + 100) + '\n';
+      }
+    });
+    return relevant || 'Не знайдено в мануалі.';
+  } catch (err) {
+    return 'Помилка читання PDF.';
+  }
+}
+
+// У /api/chat, перед generateContent:
+app.post('/api/chat', async (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: 'Повідомлення порожнє' });
+
+  try {
+    // Шукай ключові слова (наприклад, з повідомлення)
+    const searchTerms = message.toLowerCase().split(' ').filter(word => word.length > 3);
+    let manualContext = '';
+
+    // Читай всі PDF з папки /manuals
+    const manualsDir = './manuals';
+    if (fs.existsSync(manualsDir)) {
+      const files = fs.readdirSync(manualsDir).filter(f => f.endsWith('.pdf'));
+      for (const file of files) {
+        const context = await extractFromPDF(`${manualsDir}/${file}`, searchTerms);
+        if (context !== 'Не знайдено в мануалі.') {
+          manualContext += `З ${file}: ${context}\n`;
+        }
+      }
+    }
+
+    const prompt = SYSTEM_PROMPT + '\n\nКонтекст з мануалів: ' + manualContext + '\n\nКористувач: ' + message;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    res.json({ reply: text });
+  } catch (error) {
+    console.error('Помилка:', error);
+    res.status(500).json({ error: 'Помилка з Gemini' });
+  }
+});
