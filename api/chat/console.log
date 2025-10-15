@@ -1,1 +1,18 @@
+app.post('/api/chat', async (req, res) => {
+  const { message } = req.body;
+  console.log('Отримано повідомлення:', message);  // Дебаг
+  if (!message) return res.status(400).json({ error: 'Повідомлення порожнє' });
 
+  try {
+    const prompt = SYSTEM_PROMPT + '\n\nКористувач: ' + message;
+    console.log('Промпт для Gemini:', prompt.substring(0, 100) + '...');  // Обрізаний дебаг
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    console.log('Відповідь від Gemini:', text);  // Дебаг
+    res.json({ reply: text });
+  } catch (error) {
+    console.error('Помилка Gemini:', error.message);  // Детальний лог
+    res.status(500).json({ error: 'Помилка з Gemini API: ' + error.message });
+  }
+});
