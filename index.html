@@ -14,7 +14,7 @@
       font-family: 'Roboto', sans-serif;
     }
     body {
-      background: #1a1a1a; /* Темна тема за замовчуванням */
+      background: #1a1a1a;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
@@ -24,7 +24,7 @@
       background: #f5f5f5;
     }
     .header {
-      background: #000000; /* Чорний замість синього */
+      background: #000000;
       color: white;
       text-align: center;
       padding: 0.5rem;
@@ -62,7 +62,7 @@
       flex: 1;
       padding: 10px;
       overflow-y: auto;
-      max-height: calc(100vh - 140px);
+      max-height: calc(100vh - 160px); /* Збільшено через більше поле вводу */
     }
     .message {
       margin: 8px 0;
@@ -73,7 +73,7 @@
       font-size: 14px;
     }
     .message.user {
-      background: #000000; /* Чорний замість синього */
+      background: #000000;
       color: white;
       margin-left: auto;
       text-align: right;
@@ -110,10 +110,11 @@
     }
     #userInput {
       flex: 1;
-      padding: 8px;
+      padding: 12px;
       border: 1px solid #555;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 16px; /* Збільшено */
+      height: 48px; /* Збільшено */
       outline: none;
       background: #333;
       color: white;
@@ -124,13 +125,13 @@
       border-color: #ccc;
     }
     #userInput:focus {
-      border-color: #000000; /* Чорний замість синього */
+      border-color: #000000;
       box-shadow: 0 0 4px rgba(0,0,0,0.3);
     }
     .send-button {
-      width: 32px;
-      height: 32px;
-      background: #000000; /* Чорний замість синього */
+      width: 40px; /* Збільшено */
+      height: 40px; /* Збільшено */
+      background: #000000;
       border: none;
       border-radius: 50%;
       display: flex;
@@ -142,14 +143,14 @@
     }
     .send-button:hover {
       transform: scale(1.1);
-      background: #333333; /* Темно-сірий для контрасту */
+      background: #333333;
     }
     .send-button:active {
       transform: rotate(45deg);
     }
     .send-button svg {
-      width: 18px;
-      height: 18px;
+      width: 24px; /* Збільшено */
+      height: 24px; /* Збільшено */
       fill: white;
     }
     .theme-toggle {
@@ -183,7 +184,7 @@
       transition: transform 0.3s;
     }
     .theme-toggle input:checked + label {
-      background: #000000; /* Чорний замість синього */
+      background: #000000;
     }
     .theme-toggle input:checked + label::after {
       transform: translateX(20px);
@@ -217,7 +218,7 @@
       }
       .messages {
         padding: 8px;
-        max-height: calc(100vh - 120px);
+        max-height: calc(100vh - 140px);
       }
       .message {
         font-size: 13px;
@@ -227,16 +228,17 @@
         padding: 6px;
       }
       #userInput {
-        font-size: 13px;
-        padding: 6px;
+        font-size: 14px; /* Збільшено */
+        padding: 10px;
+        height: 40px; /* Збільшено */
       }
       .send-button {
-        width: 28px;
-        height: 28px;
+        width: 36px; /* Збільшено */
+        height: 36px; /* Збільшено */
       }
       .send-button svg {
-        width: 16px;
-        height: 16px;
+        width: 20px; /* Збільшено */
+        height: 20px; /* Збільшено */
       }
       .theme-toggle {
         top: 8px;
