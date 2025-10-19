@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ДронСаппорт - Техпідтримка дронів</title>
   <link rel="icon" type="image/png" href="/logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
@@ -27,41 +27,49 @@
       background: #007bff;
       color: white;
       text-align: center;
-      padding: 1rem;
+      padding: 0.5rem;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      position: relative;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      transition: transform 0.3s;
+    }
+    .header.hidden {
+      transform: translateY(-100%);
     }
     .header img {
-      width: 80px;
-      margin: 10px auto;
+      width: 60px;
+      margin: 5px auto;
       display: block;
+      loading: lazy;
     }
     .chat-wrapper {
       flex: 1;
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 10px;
+      max-width: 100%;
+      margin: 0;
+      padding: 5px;
       display: flex;
       flex-direction: column;
       background: #2c2c2c;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 0;
+      box-shadow: none;
     }
     body.light .chat-wrapper {
       background: white;
     }
     .messages {
       flex: 1;
-      padding: 20px;
+      padding: 10px;
       overflow-y: auto;
-      max-height: calc(100vh - 200px);
+      max-height: calc(100vh - 140px);
     }
     .message {
-      margin: 10px 0;
-      padding: 10px 15px;
+      margin: 8px 0;
+      padding: 8px 12px;
       border-radius: 8px;
-      max-width: 80%;
+      max-width: 85%;
       word-wrap: break-word;
+      font-size: 14px;
     }
     .message.user {
       background: #007bff;
@@ -80,16 +88,20 @@
     }
     .message img {
       max-width: 100%;
-      margin-top: 10px;
+      margin-top: 8px;
       border-radius: 4px;
+      loading: lazy;
     }
     .input-container {
-      padding: 10px;
+      padding: 8px;
       border-top: 1px solid #555;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       background: #2c2c2c;
       align-items: center;
+      position: sticky;
+      bottom: 0;
+      z-index: 5;
     }
     body.light .input-container {
       background: white;
@@ -97,10 +109,10 @@
     }
     #userInput {
       flex: 1;
-      padding: 10px;
+      padding: 8px;
       border: 1px solid #555;
       border-radius: 8px;
-      font-size: 16px;
+      font-size: 14px;
       outline: none;
       background: #333;
       color: white;
@@ -112,11 +124,11 @@
     }
     #userInput:focus {
       border-color: #007bff;
-      box-shadow: 0 0 5px rgba(0,123,255,0.3);
+      box-shadow: 0 0 4px rgba(0,123,255,0.3);
     }
     .send-button {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       background: #007bff;
       border: none;
       border-radius: 50%;
@@ -125,17 +137,18 @@
       justify-content: center;
       cursor: pointer;
       transition: transform 0.2s, background 0.2s;
+      padding: 8px; /* Збільшена область натискання */
     }
     .send-button:hover {
-      transform: scale(1.1); /* Пульсування при наведенні */
+      transform: scale(1.1);
       background: #0056b3;
     }
     .send-button:active {
-      transform: rotate(45deg); /* Обертання при кліку */
+      transform: rotate(45deg);
     }
     .send-button svg {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       fill: white;
     }
     .theme-toggle {
@@ -148,18 +161,19 @@
     }
     .theme-toggle label {
       display: block;
-      width: 50px;
-      height: 24px;
+      width: 40px;
+      height: 20px;
       background: #555;
-      border-radius: 12px;
+      border-radius: 10px;
       position: relative;
       cursor: pointer;
       transition: background 0.3s;
+      touch-action: manipulation; /* Для сенсорних екранів */
     }
     .theme-toggle label::after {
       content: '';
-      width: 20px;
-      height: 20px;
+      width: 16px;
+      height: 16px;
       background: white;
       border-radius: 50%;
       position: absolute;
@@ -171,46 +185,81 @@
       background: #007bff;
     }
     .theme-toggle input:checked + label::after {
-      transform: translateX(26px);
+      transform: translateX(20px);
     }
     .typing {
       display: none;
       font-style: italic;
       color: #aaa;
-      padding: 10px;
+      padding: 8px;
+      font-size: 12px;
     }
     body.light .typing {
       color: #666;
     }
-    /* Адаптивність */
+    /* Адаптивність для мобільних */
     @media (max-width: 600px) {
-      .chat-wrapper {
-        margin: 10px;
-        padding: 5px;
-      }
-      .messages {
-        max-height: calc(100vh - 180px);
-      }
-      #userInput {
-        font-size: 14px;
+      .header {
+        padding: 0.3rem;
       }
       .header img {
-        width: 60px;
+        width: 50px;
+      }
+      .header h1 {
+        font-size: 1.2rem;
+      }
+      .header p {
+        font-size: 0.8rem;
+      }
+      .chat-wrapper {
+        margin: 0;
+        padding: 0;
+        border-radius: 0;
+      }
+      .messages {
+        padding: 8px;
+        max-height: calc(100vh - 120px);
+      }
+      .message {
+        font-size: 13px;
+        padding: 6px 10px;
+      }
+      .input-container {
+        padding: 6px;
+      }
+      #userInput {
+        font-size: 13px;
+        padding: 6px;
       }
       .send-button {
-        width: 32px;
-        height: 32px;
+        width: 28px;
+        height: 28px;
       }
       .send-button svg {
-        width: 18px;
+        width: 16px;
+        height: 16px;
+      }
+      .theme-toggle {
+        top: 8px;
+        right: 8px;
+      }
+      .theme-toggle label {
+        width: 36px;
         height: 18px;
+      }
+      .theme-toggle label::after {
+        width: 14px;
+        height: 14px;
+      }
+      .theme-toggle input:checked + label::after {
+        transform: translateX(18px);
       }
     }
   </style>
 </head>
 <body class="dark">
   <div class="header">
-    <img src="/logo.png" alt="Логотип ДронСаппорт">
+    <img src="/logo.png" alt="Логотип ДронСаппорт" loading="lazy">
     <h1>ДронСаппорт</h1>
     <p>Технічна підтримка для FPV та інших дронів</p>
     <div class="theme-toggle">
@@ -222,7 +271,7 @@
     <div class="messages" id="messages"></div>
     <div class="typing" id="typing">ШІ думає...</div>
     <div class="input-container">
-      <input type="text" id="userInput" placeholder="Запитай про налаштування дрона..." onkeypress="if(event.key === 'Enter') sendMessage()">
+      <input type="text" id="userInput" placeholder="Запитай про дрон..." onkeypress="if(event.key === 'Enter') sendMessage()">
       <button class="send-button" onclick="sendMessage()">
         <svg viewBox="0 0 24 24">
           <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
@@ -240,6 +289,19 @@
     // Темна тема за замовчуванням
     document.body.classList.add('dark');
     document.getElementById('themeSwitch').checked = false;
+
+    // Приховування заголовка при прокручуванні
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.pageYOffset;
+      const header = document.querySelector('.header');
+      if (currentScroll > lastScroll && currentScroll > 50) {
+        header.classList.add('hidden');
+      } else {
+        header.classList.remove('hidden');
+      }
+      lastScroll = currentScroll;
+    });
 
     async function sendMessage() {
       const input = document.getElementById("userInput");
@@ -264,7 +326,7 @@
         typing.style.display = 'none';
         messages.innerHTML += `<div class="message bot">${data.reply}</div>`;
         if (data.image) {
-          messages.innerHTML += `<img src="${data.image}" alt="Схема підключення">`;
+          messages.innerHTML += `<img src="${data.image}" alt="Схема підключення" loading="lazy">`;
         }
         messages.scrollTop = messages.scrollHeight;
       } catch (error) {
