@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ДронСаппорт - Техпідтримка дронів</title>
   <link rel="icon" type="image/png" href="/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -18,6 +18,10 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      transition: background 0.3s;
+    }
+    body.dark {
+      background: #1a1a1a;
     }
     .header {
       background: #007bff;
@@ -36,22 +40,29 @@
       max-width: 800px;
       margin: 20px auto;
       padding: 0 10px;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
     .messages {
       background: white;
       border-radius: 8px;
       padding: 20px;
-      min-height: 60vh;
+      min-height: 50vh;
       max-height: 70vh;
       overflow-y: auto;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    body.dark .messages {
+      background: #2c2c2c;
+      color: white;
     }
     .message {
       margin: 10px 0;
       padding: 10px 15px;
       border-radius: 8px;
       max-width: 80%;
+      word-wrap: break-word;
     }
     .message.user {
       background: #007bff;
@@ -60,159 +71,4 @@
       text-align: right;
     }
     .message.bot {
-      background: #e9ecef;
-      color: black;
-      margin-right: auto;
-    }
-    .message img {
-      max-width: 100%;
-      margin-top: 10px;
-      border-radius: 4px;
-    }
-    .input-container {
-      max-width: 800px;
-      margin: 0 auto 20px;
-      display: flex;
-      gap: 10px;
-      padding: 0 10px;
-    }
-    #userInput {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-      outline: none;
-    }
-    #userInput:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 5px rgba(0,123,255,0.3);
-    }
-    button {
-      padding: 10px 20px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    .typing {
-      display: none;
-      font-style: italic;
-      color: #666;
-    }
-    /* Темний режим */
-    @media (prefers-color-scheme: dark) {
-      body {
-        background: #1a1a1a;
-      }
-      .messages {
-        background: #2c2c2c;
-        color: white;
-      }
-      .message.bot {
-        background: #444;
-        color: white;
-      }
-      .header {
-        background: #0056b3;
-      }
-      #userInput {
-        background: #333;
-        color: white;
-        border-color: #555;
-      }
-    }
-    /* Адаптивність */
-    @media (max-width: 600px) {
-      .chat-container, .input-container {
-        margin: 10px;
-        padding: 0 5px;
-      }
-      .messages {
-        min-height: 50vh;
-      }
-      #userInput, button {
-        font-size: 14px;
-      }
-    }
-  </style>
-</head>
-<body>
-  <button onclick="toggleTheme()">Темний/Світлий режим</button>
-<script>
-  function toggleTheme() {
-    document.body.classList.toggle('dark');
-  }
-</script>
-<style>
-  body.dark { background: #1a1a1a; }
-  body.dark .messages { background: #2c2c2c; color: white; }
-  body.dark .message.bot { background: #444; color: white; }
-  body.dark #userInput { background: #333; color: white; border-color: #555; }
-</style>
-<div class="input-container">
-  <img src="/propeller.png" alt="Propeller" style="width: 24px; margin-right: 10px;">
-  <input type="text" id="userInput" placeholder="Запитай про налаштування дрона...">
-</div>
-<select onchange="changeLang(this.value)">
-  <option value="uk">Українська</option>
-  <option value="en">English</option>
-</select>
-  <div class="header">
-    <img src="/logo.png" alt="Логотип ДронСаппорт">
-    <h1>ДронСаппорт</h1>
-    <p>Технічна підтримка для FPV та інших дронів</p>
-  </div>
-  <div class="chat-container">
-    <div class="messages" id="messages"></div>
-    <div class="typing" id="typing">ШІ думає...</div>
-  </div>
-  <div class="input-container">
-    <input type="text" id="userInput" placeholder="Запитай про налаштування дрона..." onkeypress="if(event.key === 'Enter') sendMessage()">
-    <button onclick="sendMessage()">Надіслати</button>
-    <button onclick="clearChat()">Очистити</button>
-  </div>
-  <script>
-    async function sendMessage() {
-      const input = document.getElementById("userInput");
-      const messages = document.getElementById("messages");
-      const typing = document.getElementById("typing");
-      const message = input.value.trim();
-      if (!message) return;
-
-      messages.innerHTML += `<div class="message user">${message}</div>`;
-      input.value = "";
-      typing.style.display = 'block';
-      messages.scrollTop = messages.scrollHeight;
-
-      try {
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message })
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        typing.style.display = 'none';
-        messages.innerHTML += `<div class="message bot">${data.reply}</div>`;
-        if (data.image) {
-          messages.innerHTML += `<img src="${data.image}" alt="Схема підключення">`;
-        }
-        messages.scrollTop = messages.scrollHeight;
-      } catch (error) {
-        typing.style.display = 'none';
-        messages.innerHTML += `<div class="message bot">Помилка: ${error.message}</div>`;
-      }
-    }
-
-    function clearChat() {
-      document.getElementById("messages").innerHTML = '';
-    }
-  </script>
-</body>
-</html>
+      background: #e9
