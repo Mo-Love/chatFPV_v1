@@ -143,6 +143,26 @@
   </style>
 </head>
 <body>
+  <button onclick="toggleTheme()">Темний/Світлий режим</button>
+<script>
+  function toggleTheme() {
+    document.body.classList.toggle('dark');
+  }
+</script>
+<style>
+  body.dark { background: #1a1a1a; }
+  body.dark .messages { background: #2c2c2c; color: white; }
+  body.dark .message.bot { background: #444; color: white; }
+  body.dark #userInput { background: #333; color: white; border-color: #555; }
+</style>
+<div class="input-container">
+  <img src="/propeller.png" alt="Propeller" style="width: 24px; margin-right: 10px;">
+  <input type="text" id="userInput" placeholder="Запитай про налаштування дрона...">
+</div>
+<select onchange="changeLang(this.value)">
+  <option value="uk">Українська</option>
+  <option value="en">English</option>
+</select>
   <div class="header">
     <img src="/logo.png" alt="Логотип ДронСаппорт">
     <h1>ДронСаппорт</h1>
