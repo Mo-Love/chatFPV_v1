@@ -1,5 +1,5 @@
 const express = require('express');
-const { GoogleGenerativeAI } = require('@google/genai');  // Було: '@google/generative-ai'
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 const pdf = require('pdf-parse');
 const path = require('path');
@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });  // Залишається те саме
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
 const SYSTEM_PROMPT = `Ти ШІ-помічник для техпідтримки дронів. Відповідай українською, коротко і лише на основі тексту з наданих мануалів. Не використовуй зовнішні знання чи припущення. Якщо відповідь не знайдена в мануалах, скажи: "Інформація відсутня в мануалах. Опиши детальніше або перевір мануал."`;
 
