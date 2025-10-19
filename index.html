@@ -1,67 +1,197 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Технічна Підтримка для FPV Дронів</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-        .header { background-color: #333; color: white; padding: 20px; text-align: center; }
-        .chat-container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); overflow: hidden; }
-        .chat-messages { height: 400px; overflow-y: scroll; padding: 10px; border-bottom: 1px solid #ddd; }
-        .message { margin-bottom: 10px; padding: 8px; border-radius: 5px; }
-        .user { background-color: #007bff; color: white; text-align: right; }
-        .bot { background-color: #e9ecef; color: #333; }
-        .input-area { display: flex; padding: 10px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; margin-left: 10px; cursor: pointer; }
-        @media (max-width: 600px) { .input-area { flex-direction: column; } button { margin-left: 0; margin-top: 10px; } }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ДронСаппорт - Техпідтримка дронів</title>
+  <link rel="icon" type="image/png" href="/logo.png">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Roboto', sans-serif;
+    }
+    body {
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .header {
+      background: #007bff;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header img {
+      width: 80px;
+      margin: 10px auto;
+      display: block;
+    }
+    .chat-container {
+      flex: 1;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 10px;
+      overflow-y: auto;
+    }
+    .messages {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      min-height: 60vh;
+      max-height: 70vh;
+      overflow-y: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .message {
+      margin: 10px 0;
+      padding: 10px 15px;
+      border-radius: 8px;
+      max-width: 80%;
+    }
+    .message.user {
+      background: #007bff;
+      color: white;
+      margin-left: auto;
+      text-align: right;
+    }
+    .message.bot {
+      background: #e9ecef;
+      color: black;
+      margin-right: auto;
+    }
+    .message img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 4px;
+    }
+    .input-container {
+      max-width: 800px;
+      margin: 0 auto 20px;
+      display: flex;
+      gap: 10px;
+      padding: 0 10px;
+    }
+    #userInput {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+    #userInput:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0,123,255,0.3);
+    }
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .typing {
+      display: none;
+      font-style: italic;
+      color: #666;
+    }
+    /* Темний режим */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #1a1a1a;
+      }
+      .messages {
+        background: #2c2c2c;
+        color: white;
+      }
+      .message.bot {
+        background: #444;
+        color: white;
+      }
+      .header {
+        background: #0056b3;
+      }
+      #userInput {
+        background: #333;
+        color: white;
+        border-color: #555;
+      }
+    }
+    /* Адаптивність */
+    @media (max-width: 600px) {
+      .chat-container, .input-container {
+        margin: 10px;
+        padding: 0 5px;
+      }
+      .messages {
+        min-height: 50vh;
+      }
+      #userInput, button {
+        font-size: 14px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1>ШІ Підтримка для FPV Дронів</h1>
-        <p>Запитайте про запчастини, ПЗ, технічну підтримку та дебаг</p>
-    </div>
-    <div class="chat-container">
-        <div class="chat-messages" id="messages">
-            <div class="message bot">Привіт! Я ШІ-помічник для FPV дронів. Як я можу допомогти? (Наприклад: "Дрон не армується", "Мотор гріється")</div>
-        </div>
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="Введіть ваше питання...">
-            <button onclick="sendMessage()">Надіслати</button>
-        </div>
-    </div>
-
-    <script>
+  <div class="header">
+    <img src="/logo.png" alt="Логотип ДронСаппорт">
+    <h1>ДронСаппорт</h1>
+    <p>Технічна підтримка для FPV та інших дронів</p>
+  </div>
+  <div class="chat-container">
+    <div class="messages" id="messages"></div>
+    <div class="typing" id="typing">ШІ думає...</div>
+  </div>
+  <div class="input-container">
+    <input type="text" id="userInput" placeholder="Запитай про налаштування дрона..." onkeypress="if(event.key === 'Enter') sendMessage()">
+    <button onclick="sendMessage()">Надіслати</button>
+    <button onclick="clearChat()">Очистити</button>
+  </div>
+  <script>
     async function sendMessage() {
-        const input = document.getElementById("userInput");
-        const message = input.value.trim();
-        if (!message) return;
+      const input = document.getElementById("userInput");
+      const messages = document.getElementById("messages");
+      const typing = document.getElementById("typing");
+      const message = input.value.trim();
+      if (!message) return;
 
-        const messages = document.getElementById("messages");
-        messages.innerHTML += `<div class="message user">${message}</div>`;
-        input.value = "";
+      messages.innerHTML += `<div class="message user">${message}</div>`;
+      input.value = "";
+      typing.style.display = 'block';
+      messages.scrollTop = messages.scrollHeight;
 
-        try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message })
-            });
-            const data = await response.json();
-            setTimeout(() => {
-                messages.innerHTML += `<div class="message bot">${data.reply || 'Помилка відповіді'}</div>`;
-                messages.scrollTop = messages.scrollHeight;
-            }, 500);
-        } catch (error) {
-            messages.innerHTML += `<div class="message bot">Помилка: Не можу підключитися до ШІ.</div>`;
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        typing.style.display = 'none';
+        messages.innerHTML += `<div class="message bot">${data.reply}</div>`;
+        if (data.image) {
+          messages.innerHTML += `<img src="${data.image}" alt="Схема підключення">`;
         }
+        messages.scrollTop = messages.scrollHeight;
+      } catch (error) {
+        typing.style.display = 'none';
+        messages.innerHTML += `<div class="message bot">Помилка: ${error.message}</div>`;
+      }
     }
 
-    document.getElementById("userInput").addEventListener("keypress", function(e) {
-        if (e.key === "Enter") sendMessage();
-    });
-</script>
+    function clearChat() {
+      document.getElementById("messages").innerHTML = '';
+    }
+  </script>
 </body>
 </html>
