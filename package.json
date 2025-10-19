@@ -1,20 +1,21 @@
 {
   "name": "fpv-drone-chat",
   "version": "1.0.0",
-  "description": "FPV Drone Support Chat with Gemini",
+  "description": "FPV Drone Support Chat",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
- "dependencies": {
-  "@google/generative-ai": "^0.7.2",  // Останніша, підтримує 2.5 серію
-  "express": "^4.18.2"
-}
-}
-{
+  "engines": {
+    "node": "20",
+    "python": "3.8"
+  },
   "dependencies": {
     "@google/generative-ai": "^0.7.2",
     "express": "^4.18.2",
-    "pdf-parse": "^1.1.1"  // Нова для читання PDF
+    "pdf-parse": "^1.1.1",
+    "pdf2pic": "^3.1.1",
+    "python-shell": "^5.0.0",
+    "sentence-transformers": "^2.2.2"
   }
 }
