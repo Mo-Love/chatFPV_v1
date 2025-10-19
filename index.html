@@ -14,14 +14,14 @@
       font-family: 'Roboto', sans-serif;
     }
     body {
-      background: #f5f5f5;
+      background: #1a1a1a; /* Темна тема за замовчуванням */
       display: flex;
       flex-direction: column;
       min-height: 100vh;
       transition: background 0.3s;
     }
-    body.dark {
-      background: #1a1a1a;
+    body.light {
+      background: #f5f5f5;
     }
     .header {
       background: #007bff;
@@ -29,6 +29,7 @@
       text-align: center;
       padding: 1rem;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: relative;
     }
     .header img {
       width: 80px;
@@ -42,12 +43,12 @@
       padding: 10px;
       display: flex;
       flex-direction: column;
-      background: white;
+      background: #2c2c2c;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    body.dark .chat-wrapper {
-      background: #2c2c2c;
+    body.light .chat-wrapper {
+      background: white;
     }
     .messages {
       flex: 1;
@@ -69,13 +70,13 @@
       text-align: right;
     }
     .message.bot {
-      background: #e9ecef;
-      color: black;
-      margin-right: auto;
-    }
-    body.dark .message.bot {
       background: #444;
       color: white;
+      margin-right: auto;
+    }
+    body.light .message.bot {
+      background: #e9ecef;
+      color: black;
     }
     .message img {
       max-width: 100%;
@@ -84,28 +85,30 @@
     }
     .input-container {
       padding: 10px;
-      border-top: 1px solid #ccc;
+      border-top: 1px solid #555;
       display: flex;
       gap: 10px;
-      background: white;
+      background: #2c2c2c;
       align-items: center;
     }
-    body.dark .input-container {
-      background: #2c2c2c;
-      border-top-color: #555;
+    body.light .input-container {
+      background: white;
+      border-top-color: #ccc;
     }
     #userInput {
       flex: 1;
       padding: 10px;
-      border: 1px solid #ccc;
+      border: 1px solid #555;
       border-radius: 8px;
       font-size: 16px;
       outline: none;
-    }
-    body.dark #userInput {
       background: #333;
       color: white;
-      border-color: #555;
+    }
+    body.light #userInput {
+      background: white;
+      color: black;
+      border-color: #ccc;
     }
     #userInput:focus {
       border-color: #007bff;
@@ -121,10 +124,14 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: transform 0.2s, background 0.2s;
     }
     .send-button:hover {
+      transform: scale(1.1); /* Пульсування при наведенні */
       background: #0056b3;
+    }
+    .send-button:active {
+      transform: rotate(45deg); /* Обертання при кліку */
     }
     .send-button svg {
       width: 20px;
@@ -135,24 +142,45 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      padding: 8px 16px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
     }
-    .theme-toggle:hover {
-      background: #0056b3;
+    .theme-toggle input {
+      display: none;
+    }
+    .theme-toggle label {
+      display: block;
+      width: 50px;
+      height: 24px;
+      background: #555;
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .theme-toggle label::after {
+      content: '';
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.3s;
+    }
+    .theme-toggle input:checked + label {
+      background: #007bff;
+    }
+    .theme-toggle input:checked + label::after {
+      transform: translateX(26px);
     }
     .typing {
       display: none;
       font-style: italic;
-      color: #666;
+      color: #aaa;
       padding: 10px;
     }
-    body.dark .typing {
-      color: #aaa;
+    body.light .typing {
+      color: #666;
     }
     /* Адаптивність */
     @media (max-width: 600px) {
@@ -180,12 +208,15 @@
     }
   </style>
 </head>
-<body>
+<body class="dark">
   <div class="header">
     <img src="/logo.png" alt="Логотип ДронСаппорт">
     <h1>ДронСаппорт</h1>
     <p>Технічна підтримка для FPV та інших дронів</p>
-    <button class="theme-toggle" onclick="toggleTheme()">Темний/Світлий режим</button>
+    <div class="theme-toggle">
+      <input type="checkbox" id="themeSwitch" onchange="toggleTheme()">
+      <label for="themeSwitch"></label>
+    </div>
   </div>
   <div class="chat-wrapper">
     <div class="messages" id="messages"></div>
@@ -202,12 +233,13 @@
   <script>
     function toggleTheme() {
       document.body.classList.toggle('dark');
+      document.body.classList.toggle('light');
       localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
     }
 
-    if (localStorage.getItem('theme') === 'dark') {
-      document.body.classList.add('dark');
-    }
+    // Темна тема за замовчуванням
+    document.body.classList.add('dark');
+    document.getElementById('themeSwitch').checked = false;
 
     async function sendMessage() {
       const input = document.getElementById("userInput");
