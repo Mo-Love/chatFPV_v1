@@ -1,54 +1,20 @@
 const express = require('express');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI } = require('@google/genai');  // Було: '@google/generative-ai'
+const fs = require('fs');
+const pdf = require('pdf-parse');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware для JSON і статичних файлів
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
-// Ініціалізуємо Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });  // Було: 'gemini-1.5-flash'
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });  // Залишається те саме
 
-// Промпт для FPV-контексту
-const SYSTEM_PROMPT = `Ти проста мовна модель ШІ для технічної підтримки FPV дронів. 
-Відповідай українською, коротко та практично, на основі мануалів по запчастинах (мотори, пропи, ESC, LiPo) та ПЗ (Betaflight, DJI FPV, INAV).
-Приклади проблем: армування, PID tuning, death roll, відео-шум, мотор гріється.
-Джерела: Betaflight FAQ, Oscar Liang guide, GetFPV troubleshooting, Mepsking.
-Якщо не знаєш — скажи "Перевір мануал або опиши детальніше".`;
+const SYSTEM_PROMPT = `Ти ШІ-помічник для техпідтримки дронів. Відповідай українською, коротко і лише на основі тексту з наданих мануалів. Не використовуй зовнішні знання чи припущення. Якщо відповідь не знайдена в мануалах, скажи: "Інформація відсутня в мануалах. Опиши детальніше або перевір мануал."`;
 
-app.post('/api/chat', async (req, res) => {
-  const { message } = req.body;
-  if (!message) return res.status(400).json({ error: 'Повідомлення порожнє' });
-
-  try {
-    const prompt = SYSTEM_PROMPT + '\n\nКористувач: ' + message;
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    res.json({ reply: text });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Помилка з Gemini API' });
-  }
-});
-
-// Головна сторінка — наш HTML
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Сервер на http://localhost:${PORT}`);
-});
-
-const fs = require('fs');
-const pdf = require('pdf-parse');
-
-// Функція для читання PDF
 async function extractFromPDF(pdfPath, searchTerms) {
   try {
     const dataBuffer = fs.readFileSync(pdfPath);
@@ -58,45 +24,55 @@ async function extractFromPDF(pdfPath, searchTerms) {
     searchTerms.forEach(term => {
       const index = text.indexOf(term.toLowerCase());
       if (index !== -1) {
-        // Бере ~200 символів навколо терміну
         relevant += text.substring(Math.max(0, index - 100), index + 100) + '\n';
       }
     });
-    return relevant || 'Не знайдено в мануалі.';
+    return relevant || 'Інформація відсутня в мануалах.';
   } catch (err) {
+    console.error(`Помилка читання ${pdfPath}:`, err);
     return 'Помилка читання PDF.';
   }
 }
 
-// У /api/chat, перед generateContent:
 app.post('/api/chat', async (req, res) => {
   const { message } = req.body;
+  console.log('Отримано повідомлення:', message);
   if (!message) return res.status(400).json({ error: 'Повідомлення порожнє' });
 
   try {
-    // Шукай ключові слова (наприклад, з повідомлення)
     const searchTerms = message.toLowerCase().split(' ').filter(word => word.length > 3);
     let manualContext = '';
 
-    // Читай всі PDF з папки /manuals
     const manualsDir = './manuals';
     if (fs.existsSync(manualsDir)) {
       const files = fs.readdirSync(manualsDir).filter(f => f.endsWith('.pdf'));
       for (const file of files) {
         const context = await extractFromPDF(`${manualsDir}/${file}`, searchTerms);
-        if (context !== 'Не знайдено в мануалі.') {
+        if (context !== 'Інформація відсутня в мануалах.') {
           manualContext += `З ${file}: ${context}\n`;
         }
       }
     }
 
-    const prompt = SYSTEM_PROMPT + '\n\nКонтекст з мануалів: ' + manualContext + '\n\nКористувач: ' + message;
+    const prompt = `${SYSTEM_PROMPT}\n\nКонтекст з мануалів:\n${manualContext}\n\nЗапит користувача: ${message}`;
+    console.log('Промпт:', prompt.substring(0, 100) + '...');
+
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
+    console.log('Відповідь:', text);
+
     res.json({ reply: text });
   } catch (error) {
-    console.error('Помилка:', error);
-    res.status(500).json({ error: 'Помилка з Gemini' });
+    console.error('Помилка Gemini:', error.message);
+    res.status(500).json({ error: 'Помилка з Gemini API: ' + error.message });
   }
+});
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Сервер на http://localhost:${PORT}`);
 });
