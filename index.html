@@ -71,4 +71,150 @@
       text-align: right;
     }
     .message.bot {
-      background: #e9
+      background: #e9ecef;
+      color: black;
+      margin-right: auto;
+    }
+    body.dark .message.bot {
+      background: #444;
+      color: white;
+    }
+    .message img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 4px;
+    }
+    .input-container {
+      max-width: 800px;
+      margin: 0 auto 20px;
+      display: flex;
+      gap: 10px;
+      padding: 0 10px;
+    }
+    #userInput {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+    body.dark #userInput {
+      background: #333;
+      color: white;
+      border-color: #555;
+    }
+    #userInput:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0,123,255,0.3);
+    }
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .theme-toggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 8px 16px;
+    }
+    .typing {
+      display: none;
+      font-style: italic;
+      color: #666;
+      margin: 10px;
+    }
+    body.dark .typing {
+      color: #aaa;
+    }
+    /* Адаптивність */
+    @media (max-width: 600px) {
+      .chat-container, .input-container {
+        margin: 10px;
+        padding: 0 5px;
+      }
+      .messages {
+        min-height: 40vh;
+      }
+      #userInput, button {
+        font-size: 14px;
+      }
+      .header img {
+        width: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="/logo.png" alt="Логотип ДронСаппорт">
+    <h1>ДронСаппорт</h1>
+    <p>Технічна підтримка для FPV та інших дронів</p>
+    <button class="theme-toggle" onclick="toggleTheme()">Темний/Світлий режим</button>
+  </div>
+  <div class="chat-container">
+    <div class="messages" id="messages"></div>
+    <div class="typing" id="typing">ШІ думає...</div>
+    <div class="input-container">
+      <input type="text" id="userInput" placeholder="Запитай про налаштування дрона..." onkeypress="if(event.key === 'Enter') sendMessage()">
+      <button onclick="sendMessage()">Надіслати</button>
+      <button onclick="clearChat()">Очистити</button>
+    </div>
+  </div>
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+    }
+
+    // Завантаження збереженої теми
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark');
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("userInput");
+      const messages = document.getElementById("messages");
+      const typing = document.getElementById("typing");
+      const message = input.value.trim();
+      if (!message) return;
+
+      messages.innerHTML += `<div class="message user">${message}</div>`;
+      input.value = "";
+      typing.style.display = 'block';
+      messages.scrollTop = messages.scrollHeight;
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        typing.style.display = 'none';
+        messages.innerHTML += `<div class="message bot">${data.reply}</div>`;
+        if (data.image) {
+          messages.innerHTML += `<img src="${data.image}" alt="Схема підключення">`;
+        }
+        messages.scrollTop = messages.scrollHeight;
+      } catch (error) {
+        typing.style.display = 'none';
+        messages.innerHTML += `<div class="message bot">Помилка: ${error.message}</div>`;
+      }
+    }
+
+    function clearChat() {
+      document.getElementById("messages").innerHTML = '';
+    }
+  </script>
+</body>
+</html>
