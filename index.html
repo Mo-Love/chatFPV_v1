@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ДронСаппорт - Техпідтримка дронів</title>
-  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="icon" type="image/png" href="/logo.png?v=1">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * {
@@ -38,7 +38,8 @@
       transform: translateY(-100%);
     }
     .header img {
-      width: 60px;
+      width: 80px;
+      height: 80px;
       margin: 5px auto;
       display: block;
       loading: lazy;
@@ -137,7 +138,7 @@
       justify-content: center;
       cursor: pointer;
       transition: transform 0.2s, background 0.2s;
-      padding: 8px; /* Збільшена область натискання */
+      padding: 8px;
     }
     .send-button:hover {
       transform: scale(1.1);
@@ -168,7 +169,7 @@
       position: relative;
       cursor: pointer;
       transition: background 0.3s;
-      touch-action: manipulation; /* Для сенсорних екранів */
+      touch-action: manipulation;
     }
     .theme-toggle label::after {
       content: '';
@@ -203,10 +204,8 @@
         padding: 0.3rem;
       }
       .header img {
-        width: 50px;
-      }
-      .header h1 {
-        font-size: 1.2rem;
+        width: 64px;
+        height: 64px;
       }
       .header p {
         font-size: 0.8rem;
@@ -259,8 +258,7 @@
 </head>
 <body class="dark">
   <div class="header">
-    <img src="/logo.png" alt="Логотип ДронСаппорт" loading="lazy">
-    <h1>ДронСаппорт</h1>
+    <img src="/logo.png?v=1" alt="Логотип ДронСаппорт" loading="lazy">
     <p>Технічна підтримка для FPV та інших дронів</p>
     <div class="theme-toggle">
       <input type="checkbox" id="themeSwitch" onchange="toggleTheme()">
