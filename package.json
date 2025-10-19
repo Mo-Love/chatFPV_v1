@@ -11,11 +11,10 @@
     "python": "3.8"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.7.2",
+    "@google/genai": "^0.1.0",
     "express": "^4.18.2",
     "pdf-parse": "^1.1.1",
     "pdf2pic": "^3.1.1",
-    "python-shell": "^5.0.0",
-    "sentence-transformers": "^2.2.2"
+    "python-shell": "^5.0.0"
   }
 }
