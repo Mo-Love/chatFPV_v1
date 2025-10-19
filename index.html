@@ -35,27 +35,25 @@
       margin: 10px auto;
       display: block;
     }
-    .chat-container {
+    .chat-wrapper {
       flex: 1;
       max-width: 800px;
       margin: 20px auto;
-      padding: 0 10px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-    }
-    .messages {
       background: white;
       border-radius: 8px;
-      padding: 20px;
-      min-height: 50vh;
-      max-height: 70vh;
-      overflow-y: auto;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    body.dark .messages {
+    body.dark .chat-wrapper {
       background: #2c2c2c;
-      color: white;
+    }
+    .messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      max-height: calc(100vh - 200px);
     }
     .message {
       margin: 10px 0;
@@ -85,11 +83,15 @@
       border-radius: 4px;
     }
     .input-container {
-      max-width: 800px;
-      margin: 0 auto 20px;
+      padding: 10px;
+      border-top: 1px solid #ccc;
       display: flex;
       gap: 10px;
-      padding: 0 10px;
+      background: white;
+    }
+    body.dark .input-container {
+      background: #2c2c2c;
+      border-top-color: #555;
     }
     #userInput {
       flex: 1;
@@ -130,19 +132,19 @@
       display: none;
       font-style: italic;
       color: #666;
-      margin: 10px;
+      padding: 10px;
     }
     body.dark .typing {
       color: #aaa;
     }
     /* Адаптивність */
     @media (max-width: 600px) {
-      .chat-container, .input-container {
+      .chat-wrapper {
         margin: 10px;
-        padding: 0 5px;
+        padding: 5px;
       }
       .messages {
-        min-height: 40vh;
+        max-height: calc(100vh - 180px);
       }
       #userInput, button {
         font-size: 14px;
@@ -160,7 +162,7 @@
     <p>Технічна підтримка для FPV та інших дронів</p>
     <button class="theme-toggle" onclick="toggleTheme()">Темний/Світлий режим</button>
   </div>
-  <div class="chat-container">
+  <div class="chat-wrapper">
     <div class="messages" id="messages"></div>
     <div class="typing" id="typing">ШІ думає...</div>
     <div class="input-container">
