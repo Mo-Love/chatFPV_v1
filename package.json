@@ -1,19 +1,9 @@
 {
-  "name": "fpv-drone-chat",
-  "version": "1.0.0",
-  "description": "FPV Drone Support Chat",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "engines": {
-    "node": "20"
-  },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "express": "^4.18.2",
     "pdf-parse": "^1.1.1",
-    "pdf2pic": "^3.1.1",
-    "python-shell": "^5.0.0"
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12"
   }
 }
