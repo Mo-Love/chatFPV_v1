@@ -71,6 +71,7 @@
       max-width: 85%;
       word-wrap: break-word;
       font-size: 14px;
+      line-height: 1.5; /* Читабельність */
       position: relative;
     }
     .message.user {
@@ -83,6 +84,7 @@
       background: #444;
       color: white;
       margin-right: auto;
+      white-space: pre-wrap; /* Читабельність для списків */
     }
     body.light .message.bot {
       background: #e9ecef;
@@ -217,7 +219,8 @@
       font-style: italic;
       color: #aaa;
       padding: 8px;
-      font-size: 12px;
+      font-size: 16px; /* Більший шрифт */
+      text-align: center;
     }
     body.light .typing {
       color: #666;
@@ -255,6 +258,9 @@
         width: 12px;
         height: 12px;
       }
+      .typing {
+        font-size: 14px; /* Більший шрифт на мобільних */
+      }
     }
   </style>
 </head>
@@ -269,7 +275,7 @@
   </div>
   <div class="chat-wrapper">
     <div class="messages" id="messages"></div>
-    <div class="typing" id="typing">ШІ думає...</div>
+    <div class="typing" id="typing">Друже, я думаю...</div>
     <div class="input-container">
       <input type="text" id="userInput" placeholder="Запитай про дрон..." onkeypress="if(event.key === 'Enter') sendMessage()">
       <button class="mic-button" onclick="toggleSpeechRecognition()">
@@ -363,14 +369,14 @@
     }
 
     async function sendMessage() {
-      const input = document.getElementById('userInput');
-      const messages = document.getElementById('messages');
-      const typing = document.getElementById('typing');
+      const input = document.getElementById("userInput");
+      const messages = document.getElementById("messages");
+      const typing = document.getElementById("typing");
       const message = input.value.trim();
       if (!message) return;
 
       messages.innerHTML += `<div class="message user">${message}</div>`;
-      input.value = '';
+      input.value = "";
       typing.style.display = 'block';
       messages.scrollTop = messages.scrollHeight;
 
@@ -383,7 +389,7 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         typing.style.display = 'none';
-        const botMessage = `<div class="message bot">${data.reply}<button class="speak-button" onclick="speakMessage('${data.reply.replace(/'/g, "\\'")}')"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button></div>`;
+        const botMessage = `<div class="message bot">${data.reply}<button class="speak-button" onclick="speakMessage('${data.reply.replace(/'/g, "\\'")}')"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89 .86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button></div>`;
         messages.innerHTML += botMessage;
         if (data.image) {
           messages.innerHTML += `<img src="${data.image}" alt="Схема підключення" loading="lazy">`;
@@ -392,7 +398,6 @@
       } catch (error) {
         typing.style.display = 'none';
         messages.innerHTML += `<div class="message bot">Помилка: ${error.message}</div>`;
-        messages.scrollTop = messages.scrollHeight;
       }
     }
   </script>
