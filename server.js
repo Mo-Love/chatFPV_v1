@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
 const SYSTEM_PROMPT = 'Ти — експерт із FPV дронів, який допомагає користувачам із технічними питаннями щодо складання, налаштування та ремонту дронів. Використовуй інформацію з PDF-мануалів. Відповідай коротко, чітко, українською. Якщо є схема, укажи її як [Схема: /images/назва.png].';
 
@@ -60,13 +60,15 @@ app.post('/api/chat', async (req, res) => {
     let imageUrl = null;
     if (fs.existsSync(imageDir)) {
       const images = fs.readdirSync(imageDir).filter(f => f.endsWith('.png'));
+      console.log('Знайдені зображення:', images);
       const matchingImage = images.find(img => searchTerms.some(term => img.toLowerCase().includes(term)));
       if (matchingImage) {
         imageUrl = `/images/${matchingImage}`;
         manualContext += `[Схема: ${imageUrl}]`;
       }
     } else {
-      console.warn('Папка /images/ не знайдена');
+      console.warn('Папка /images/ не знайдена, створюємо порожню');
+      fs.mkdirSync(imageDir, { recursive: true });
     }
 
     const prompt = `${SYSTEM_PROMPT}\n\nКонтекст з мануалів:\n${manualContext}\n\nЗапит користувача: ${message}`;
