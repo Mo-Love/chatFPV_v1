@@ -1,7 +1,7 @@
 {
   "name": "fpv-drone-chat",
   "version": "1.0.0",
-  "description": "Чат-бот для технічної підтримки FPV дронів, що використовує PDF-мануали, оптимізований для ЗСУ та волонтерів",
+  "description": "Чат-бот для технічної підтримки FPV дронів, що використовує PDF-мануали, з дружніми відповідями, оптимізований для ЗСУ та волонтерів",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -32,10 +32,4 @@
     "gemini",
     "zsu"
   ]
-}
-"dependencies": {
-  "@google/generative-ai": "^0.24.1",
-  "@google-cloud/text-to-speech": "^5.0.0",
-  "express": "^4.18.2",
-  "pdf-parse": "^1.1.1"
 }
