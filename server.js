@@ -13,7 +13,116 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }); // Виправлено модель
 
 const SYSTEM_PROMPT = 'Ти — дружній експерт із FPV дронів, який допомагає користувачам із технічними питаннями щодо складання, налаштування та ремонту дронів. Використовуй інформацію з PDF-мануалів. Відповідай дружньо, з "Друже", коротко, чітко, українською, з абзацами та маркерами для читабельності. Якщо є схема, укажи її як [Схема: /images/назва.png].';
+async function extractFromPDF(filePath, searchTerms) 
+const express = require('express');
+const fs = require('fs');
+const path = require('fs');
+const pdf = require('pdf-parse');
+const FuzzySearch = require('fuzzy-search');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+const app = express();
+const port = process.env.PORT || 3000;
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '.')));
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+const SYSTEM_PROMPT = 'Ти — дружній експерт із FPV дронів, який допомагає користувачам із технічними питаннями щодо складання, налаштування та ремонту дронів. Використовуй інформацію з PDF-мануалів. Відповідай дружньо, з "Друже", коротко, чітко, українською, з абзацами та маркерами для читабельності. Якщо є схема, укажи її як [Схема: /images/назва.png].';
+
 async function extractFromPDF(filePath, searchTerms) {
+  console.log('Обробка PDF:', filePath, 'з термінами:', searchTerms);
+  try {
+    const dataBuffer = fs.readFileSync(filePath);
+    const data = await pdf(dataBuffer);
+    const text = data.text.toLowerCase().trim();
+    if (!text) return 'Текст не витягнуто з PDF (можливо, відсканований файл).';
+
+    // Чанкування тексту (по 500 символів для кращого пошуку)
+    const chunks = [];
+    for (let i = 0; i < text.length; i += 500) {
+      chunks.push(text.substring(i, i + 500));
+    }
+
+    // Fuzzy-пошук по чанках
+    let relevant = '';
+    const searcher = new FuzzySearch(chunks, searchTerms, { sort: true });
+    const results = searcher.search('');
+    if (results.length > 0) {
+      relevant = results[0]; // Беремо найкращий чанк
+    }
+
+    return relevant || 'Інформація не знайдена в мануалах. Спробуй уточнити запит.';
+  } catch (err) {
+    console.error(`Помилка обробки PDF ${filePath}:`, err.message);
+    return 'Помилка обробки PDF.';
+  }
+}
+
+app.post('/api/chat', async (req, res) => {
+  const { message } = req.body;
+  console.log('Отриманий запит:', message);
+  if (!message) {
+    console.error('Порожній запит');
+    return res.status(400).json({ error: 'Повідомлення порожнє' });
+  }
+
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY не встановлено');
+    }
+
+    const searchTerms = message.toLowerCase().split(' ').filter(word => word.length > 3);
+    let manualContext = '';
+    const manualsDir = path.join(__dirname, 'manuals');
+
+    if (fs.existsSync(manualsDir)) {
+      const files = fs.readdirSync(manualsDir).filter(f => f.endsWith('.pdf'));
+      console.log('Знайдені PDF:', files);
+      for (const file of files) {
+        const context = await extractFromPDF(path.join(manualsDir, file), searchTerms);
+        if (context !== 'Інформація не знайдена в мануалах. Спробуй уточнити запит.') {
+          manualContext += `З ${file}: ${context}\n`;
+        }
+      }
+    } else {
+      console.warn('Папка /manuals/ не знайдена');
+      manualContext += 'Папка з мануалами відсутня.\n';
+    }
+
+    const imageDir = path.join(__dirname, 'images');
+    let imageUrl = null;
+    if (fs.existsSync(imageDir)) {
+      const images = fs.readdirSync(imageDir).filter(f => f.endsWith('.png'));
+      console.log('Знайдені зображення:', images);
+      const matchingImage = images.find(img => searchTerms.some(term => img.toLowerCase().includes(term)));
+      if (matchingImage) {
+        imageUrl = `/images/${matchingImage}`;
+        manualContext += `[Схема: ${imageUrl}]`;
+      }
+    } else {
+      console.warn('Папка /images/ не знайдена, створюємо порожню');
+      fs.mkdirSync(imageDir, { recursive: true });
+    }
+
+    const prompt = `${SYSTEM_PROMPT}\n\nКонтекст з мануалів:\n${manualContext}\n\nЗапит користувача: ${message}`;
+    console.log('Промпт для Gemini:', prompt);
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    console.log('Відповідь Gemini:', text);
+    res.json({ reply: text, image: imageUrl });
+  } catch (error) {
+    console.error('Помилка в /api/chat:', error.message);
+    res.status(500).json({ error: `Помилка: ${error.message}` });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Сервер працює на порті ${port}`);
+});
+{
   try {
     const dataBuffer = fs.readFileSync(filePath);
     const data = await pdf(dataBuffer);
