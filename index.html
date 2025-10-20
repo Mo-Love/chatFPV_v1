@@ -293,6 +293,7 @@
       </button>
     </div>
   </div>
+  <script>
   let recognition = null;
 let isRecognizing = false;
 
@@ -414,6 +415,6 @@ async function sendMessage() {
     typing.style.display = 'none';
     messages.innerHTML += `<div class="message bot">Помилка: ${error.message}</div>`;
   }
-}
+}</script>
 </body>
 </html>
