@@ -16,3 +16,41 @@ app.post('/api/chat', async (req, res) => {
     res.status(500).json({ error: 'Помилка з Gemini API: ' + error.message });
   }
 });
+
+app.post('/api/chat', async (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: 'Повідомлення порожнє' });
+
+  try {
+    const searchTerms = message.toLowerCase().split(' ').filter(word => word.length > 3);
+    let context = '';
+
+    // PDF з /manuals (як раніше)
+    const manualsDir = './manuals';
+    if (fs.existsSync(manualsDir)) {
+      const files = fs.readdirSync(manualsDir).filter(f => f.endsWith('.pdf'));
+      for (const file of files) {
+        const pdfContext = await extractFromPDF(`${manualsDir}/${file}`, searchTerms);
+        if (pdfContext !== 'Інформація відсутня в мануалах.') {
+          context += `З ${file}: ${pdfContext}\n`;
+        }
+      }
+    }
+
+    // Додаємо скрапінг сайту (наприклад, FlyMod)
+    const siteUrl = 'https://flymod.net/'; // Або динамічно, залежно від запиту
+    const siteContext = await extractFromSite(siteUrl, searchTerms);
+    context += `З сайту ${siteUrl}: ${siteContext}\n`;
+
+    // Промпт для Gemini
+    const prompt = `Ти ШІ для техпідтримки дронів. Відповідай українською, коротко, на основі цього контексту: ${context}\n\nЗапит: ${message}`;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    res.json({ reply: text });
+  } catch (error) {
+    console.error('Помилка:', error);
+    res.status(500).json({ error: 'Помилка сервера: ' + error.message });
+  }
+});
