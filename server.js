@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Виправлено модель
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }); // Виправлено модель
 
 const SYSTEM_PROMPT = 'Ти — експерт із FPV дронів, який допомагає користувачам із технічними питаннями щодо складання, налаштування та ремонту дронів. Використовуй інформацію з PDF-мануалів. Відповідай коротко, чітко, українською. Якщо є схема, укажи її як [Схема: /images/назва.png].';
 
