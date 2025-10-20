@@ -31,6 +31,7 @@ async function extractFromPDF(filePath, searchTerms) {
 async function extractFromFlyMod(searchTerms) {
   try {
     const url = 'https://flymod.net/';
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Затримка 1 сек
     const response = await axios.get(url, { timeout: 5000 });
     const $ = cheerio.load(response.data);
     let relevant = '';
@@ -85,6 +86,7 @@ app.post('/api/chat', async (req, res) => {
       }
     } else {
       console.warn('Папка /manuals/ не знайдена');
+      manualContext += 'Папка з мануалами відсутня.\n';
     }
 
     const flyModContext = await extractFromFlyMod(searchTerms);
@@ -99,6 +101,8 @@ app.post('/api/chat', async (req, res) => {
         imageUrl = `/images/${matchingImage}`;
         manualContext += `[Схема: ${imageUrl}]`;
       }
+    } else {
+      console.warn('Папка /images/ не знайдена');
     }
 
     const prompt = `${SYSTEM_PROMPT}\n\nКонтекст з мануалів і сайту:\n${manualContext}\n\nЗапит користувача: ${message}`;
