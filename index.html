@@ -195,7 +195,7 @@
     .theme-toggle input:checked + label::after {
       transform: translateX(20px);
     }
-    .typing {
+    .progress-container {
       display: none;
       font-style: italic;
       color: #aaa;
@@ -204,19 +204,33 @@
       text-align: center;
       position: relative;
     }
-    body.light .typing {
+    body.light .progress-container {
       color: #666;
     }
-    .typing::after {
-      content: '. . .';
-      animation: pulse 1.5s infinite;
-      display: inline-block;
-      margin-left: 5px;
+    .progress-container .progress-text {
+      margin-right: 5px;
     }
-    @keyframes pulse {
-      0% { opacity: 0.3; }
-      50% { opacity: 1; }
-      100% { opacity: 0.3; }
+    .progress-container .progress-bar {
+      width: 100px;
+      height: 10px;
+      background: #333;
+      border-radius: 5px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .progress-container .progress-fill {
+      height: 100%;
+      background: #00bfff;
+      width: 0;
+      animation: progress 2.5s infinite;
+      border-radius: 5px;
+    }
+    @keyframes progress {
+      0% { width: 0%; }
+      50% { width: 50%; }
+      75% { width: 75%; }
+      100% { width: 100%; }
     }
     @media (max-width: 600px) {
       .header img {
@@ -243,8 +257,12 @@
         width: 20px;
         height: 20px;
       }
-      .typing {
+      .progress-container {
         font-size: 14px;
+      }
+      .progress-container .progress-bar {
+        width: 80px;
+        height: 8px;
       }
     }
   </style>
@@ -260,7 +278,12 @@
   </div>
   <div class="chat-wrapper">
     <div class="messages" id="messages"></div>
-    <div class="typing" id="typing">Друже, я думаю...</div>
+    <div class="progress-container" id="progress">
+      <span class="progress-text">Думаю</span>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
     <div class="input-container">
       <input type="text" id="userInput" placeholder="Запитай про дрон..." onkeypress="if(event.key === 'Enter') sendMessage()">
       <button class="send-button" onclick="sendMessage()">
@@ -295,13 +318,13 @@
     async function sendMessage() {
       const input = document.getElementById("userInput");
       const messages = document.getElementById("messages");
-      const typing = document.getElementById("typing");
+      const progress = document.getElementById("progress");
       const message = input.value.trim();
       if (!message) return;
 
       messages.innerHTML += `<div class="message user">${message}</div>`;
       input.value = "";
-      typing.style.display = 'block';
+      progress.style.display = 'block';
       messages.scrollTop = messages.scrollHeight;
 
       try {
@@ -314,7 +337,7 @@
         });
         if (!response.ok) throw new Error(`Load failed: HTTP ${response.status} - ${await response.text()}`);
         const data = await response.json();
-        typing.style.display = 'none';
+        progress.style.display = 'none';
         const botMessage = `<div class="message bot">${data.reply}</div>`;
         messages.innerHTML += botMessage;
         if (data.image) {
@@ -322,7 +345,7 @@
         }
         messages.scrollTop = messages.scrollHeight;
       } catch (error) {
-        typing.style.display = 'none';
+        progress.style.display = 'none';
         messages.innerHTML += `<div class="message bot">Помилка: ${error.message}</div>`;
         console.error('Помилка завантаження:', error);
       }
