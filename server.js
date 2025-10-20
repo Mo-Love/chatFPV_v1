@@ -28,36 +28,6 @@ async function extractFromPDF(filePath, searchTerms) {
   }
 }
 
-// Функція для скрапінгу сайту (наприклад, FlyMod.net)
-async function extractFromSite(url, searchTerms) {
-  try {
-    const response = await axios.get(url, { timeout: 5000 }); // 5 сек таймаут
-    const $ = cheerio.load(response.data);
-    let relevant = '';
-
-    // Шукаємо в ключових блоках (адаптуй селектори під сайт)
-    const selectors = [
-      'h1, h2, h3', // Заголовки (наприклад, "SpeedyBee OX32")
-      '.product-description, .article-text', // Описи товарів/статей
-      'p, li' // Загальний текст
-    ];
-
-    selectors.forEach(selector => {
-      $(selector).each((i, elem) => {
-        const text = $(elem).text().toLowerCase();
-        if (searchTerms.some(term => text.includes(term))) {
-          relevant += $(elem).text().substring(0, 200) + '... '; // Обмежуємо 200 символів
-        }
-      });
-    });
-
-    return relevant || 'Інформація з сайту відсутня.';
-  } catch (err) {
-    console.error('Помилка скрапінгу:', err.message);
-    return 'Помилка завантаження сайту. Перевір інтернет.';
-  }
-}
-
 async function extractFromFlyMod(searchTerms) {
   try {
     const url = 'https://flymod.net/';
@@ -65,8 +35,8 @@ async function extractFromFlyMod(searchTerms) {
     const $ = cheerio.load(response.data);
     let relevant = '';
     const sections = [
-      { selector: '.catalog-item', keywords: ['fpv', 'vtx', 'expresslrs'] },
-      { selector: '.article', keywords: ['expresslrs', 'fpv video', 'drone nationals'] },
+      { selector: 'h1, h2, h3', keywords: searchTerms },
+      { selector: '.product-description, .article-text', keywords: ['fpv', 'vtx', 'expresslrs', 'esc'] },
       { selector: 'p, li', keywords: searchTerms }
     ];
 
@@ -75,7 +45,7 @@ async function extractFromFlyMod(searchTerms) {
         const text = $(elem).text().toLowerCase();
         section.keywords.forEach(term => {
           if (text.includes(term)) {
-            relevant += text.substring(0, 200) + '... ';
+            relevant += $(elem).text().substring(0, 200) + '... ';
           }
         });
       });
@@ -120,7 +90,6 @@ app.post('/api/chat', async (req, res) => {
     const flyModContext = await extractFromFlyMod(searchTerms);
     manualContext += `З FlyMod.net: ${flyModContext}\n`;
 
-    // Логіка для схем
     const imageDir = path.join(__dirname, 'images');
     let imageUrl = null;
     if (fs.existsSync(imageDir)) {
