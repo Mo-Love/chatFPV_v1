@@ -33,3 +33,39 @@
     "zsu"
   ]
 }
+{
+  "name": "fpv-drone-chat",
+  "version": "1.0.0",
+  "description": "Чат-бот для технічної підтримки FPV дронів, що використовує PDF-мануалів, оптимізований для ЗСУ та волонтерів",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "express": "^4.18.2",
+    "pdf-parse": "^1.1.1",
+    "fuzzy-search": "^3.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "author": "DroneSupport Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/твій_репо/fpv-drone-chat.git"
+  },
+  "keywords": [
+    "fpv",
+    "drone",
+    "technical-support",
+    "chatbot",
+    "gemini",
+    "zsu"
+  ]
+}
