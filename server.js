@@ -2,8 +2,6 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const pdf = require('pdf-parse');
-const axios = require('axios');
-const cheerio = require('cheerio');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
@@ -14,7 +12,7 @@ app.use(express.static(path.join(__dirname, '.')));
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-const SYSTEM_PROMPT = 'Ти — експерт із FPV дронів, який допомагає користувачам із технічними питаннями щодо складання, налаштування та ремонту дронів. Використовуй інформацію з мануалів (PDF) і FlyMod.net. Відповідай коротко, чітко, українською. Якщо є схема, укажи її як [Схема: /images/назва.png].';
+const SYSTEM_PROMPT = 'Ти — експерт із FPV дронів, який допомагає користувачам із технічними питаннями щодо складання, налаштування та ремонту дронів. Використовуй інформацію з PDF-мануалів. Відповідай коротко, чітко, українською. Якщо є схема, укажи її як [Схема: /images/назва.png].';
 
 async function extractFromPDF(filePath, searchTerms) {
   try {
@@ -25,37 +23,6 @@ async function extractFromPDF(filePath, searchTerms) {
   } catch (err) {
     console.error(`Помилка обробки PDF ${filePath}:`, err.message);
     return 'Помилка обробки PDF.';
-  }
-}
-
-async function extractFromFlyMod(searchTerms) {
-  try {
-    const url = 'https://flymod.net/';
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Затримка 1 сек
-    const response = await axios.get(url, { timeout: 5000 });
-    const $ = cheerio.load(response.data);
-    let relevant = '';
-    const sections = [
-      { selector: 'h1, h2, h3', keywords: searchTerms },
-      { selector: '.product-description, .article-text', keywords: ['fpv', 'vtx', 'expresslrs', 'esc'] },
-      { selector: 'p, li', keywords: searchTerms }
-    ];
-
-    sections.forEach(section => {
-      $(section.selector).each((i, elem) => {
-        const text = $(elem).text().toLowerCase();
-        section.keywords.forEach(term => {
-          if (text.includes(term)) {
-            relevant += $(elem).text().substring(0, 200) + '... ';
-          }
-        });
-      });
-    });
-
-    return relevant || 'Інформація з FlyMod відсутня.';
-  } catch (err) {
-    console.error('Помилка скрапінгу FlyMod:', err.message);
-    return 'Помилка завантаження сайту.';
   }
 }
 
@@ -89,9 +56,6 @@ app.post('/api/chat', async (req, res) => {
       manualContext += 'Папка з мануалами відсутня.\n';
     }
 
-    const flyModContext = await extractFromFlyMod(searchTerms);
-    manualContext += `З FlyMod.net: ${flyModContext}\n`;
-
     const imageDir = path.join(__dirname, 'images');
     let imageUrl = null;
     if (fs.existsSync(imageDir)) {
@@ -105,7 +69,7 @@ app.post('/api/chat', async (req, res) => {
       console.warn('Папка /images/ не знайдена');
     }
 
-    const prompt = `${SYSTEM_PROMPT}\n\nКонтекст з мануалів і сайту:\n${manualContext}\n\nЗапит користувача: ${message}`;
+    const prompt = `${SYSTEM_PROMPT}\n\nКонтекст з мануалів:\n${manualContext}\n\nЗапит користувача: ${message}`;
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
