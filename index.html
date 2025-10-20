@@ -293,116 +293,127 @@
       </button>
     </div>
   </div>
-  <script>
-    let recognition = null;
-    let isRecognizing = false;
+  let recognition = null;
+let isRecognizing = false;
 
-    function toggleTheme() {
-      document.body.classList.toggle('dark');
-      document.body.classList.toggle('light');
-      localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-    }
+function toggleTheme() {
+  document.body.classList.toggle('dark');
+  document.body.classList.toggle('light');
+  localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+}
 
-    document.body.classList.add('dark');
-    document.getElementById('themeSwitch').checked = false;
+document.body.classList.add('dark');
+document.getElementById('themeSwitch').checked = false;
 
-    let lastScroll = 0;
-    window.addEventListener('scroll', () => {
-      const currentScroll = window.pageYOffset;
-      const header = document.querySelector('.header');
-      if (currentScroll > lastScroll && currentScroll > 50) {
-        header.classList.add('hidden');
-      } else {
-        header.classList.remove('hidden');
-      }
-      lastScroll = currentScroll;
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  const currentScroll = window.pageYOffset;
+  const header = document.querySelector('.header');
+  if (currentScroll > lastScroll && currentScroll > 50) {
+    header.classList.add('hidden');
+  } else {
+    header.classList.remove('hidden');
+  }
+  lastScroll = currentScroll;
+});
+
+function toggleSpeechRecognition() {
+  const micButton = document.querySelector('.mic-button');
+  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+    alert('Голосовий ввід не підтримується у цьому браузері. Спробуй Chrome або Edge.');
+    return;
+  }
+
+  if (!recognition) {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'uk-UA';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      console.log('Голосовий ввід запущено');
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById('userInput').value = transcript;
+      sendMessage();
+      console.log('Розпізнано текст:', transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Помилка розпізнавання:', event.error); // Дебаг
+      micButton.classList.remove('active');
+      isRecognizing = false;
+      alert('Помилка мікрофона: ' + event.error + '. Перевір дозвіл і спробуй ще раз.');
+    };
+
+    recognition.onend = () => {
+      console.log('Голосовий ввід завершено');
+      micButton.classList.remove('active');
+      isRecognizing = false;
+    };
+  }
+
+  if (isRecognizing) {
+    recognition.stop();
+    isRecognizing = false;
+  } else {
+    recognition.start();
+    micButton.classList.add('active');
+    isRecognizing = true;
+  }
+}
+
+function speakMessage(text) {
+  if ('speechSynthesis' in window) {
+    console.log('Озвучення тексту:', text); // Дебаг
+    window.speechSynthesis.cancel(); // Очищаємо черги
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'uk-UA';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0; // Максимальна гучність
+    utterance.onstart = () => console.log('Озвучення запущено');
+    utterance.onend = () => console.log('Озвучення завершено');
+    utterance.onerror = (event) => console.error('Помилка озвучення:', event.error);
+    window.speechSynthesis.speak(utterance);
+  } else {
+    alert('Синтез мовлення не підтримується у цьому браузері.');
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById("userInput");
+  const messages = document.getElementById("messages");
+  const typing = document.getElementById("typing");
+  const message = input.value.trim();
+  if (!message) return;
+
+  messages.innerHTML += `<div class="message user">${message}</div>`;
+  input.value = "";
+  typing.style.display = 'block';
+  messages.scrollTop = messages.scrollHeight;
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
     });
-
-    function toggleSpeechRecognition() {
-      const micButton = document.querySelector('.mic-button');
-      if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
-        alert('Голосовий ввід не підтримується у вашому браузері. Використовуйте Chrome або Edge.');
-        return;
-      }
-
-      if (!recognition) {
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'uk-UA';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-
-        recognition.onresult = (event) => {
-          const transcript = event.results[0][0].transcript;
-          document.getElementById('userInput').value = transcript;
-          sendMessage();
-        };
-
-        recognition.onerror = (event) => {
-          console.error('Помилка розпізнавання:', event.error);
-          micButton.classList.remove('active');
-          isRecognizing = false;
-        };
-
-        recognition.onend = () => {
-          micButton.classList.remove('active');
-          isRecognizing = false;
-        };
-      }
-
-      if (isRecognizing) {
-        recognition.stop();
-        isRecognizing = false;
-      } else {
-        recognition.start();
-        micButton.classList.add('active');
-        isRecognizing = true;
-      }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    typing.style.display = 'none';
+    const botMessage = `<div class="message bot">${data.reply}<button class="speak-button" onclick="speakMessage('${data.reply.replace(/'/g, "\\'")}')"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89 .86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button></div>`;
+    messages.innerHTML += botMessage;
+    if (data.image) {
+      messages.innerHTML += `<img src="${data.image}" alt="Схема підключення" loading="lazy">`;
     }
-
-    function speakMessage(text) {
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'uk-UA';
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        window.speechSynthesis.speak(utterance);
-      } else {
-        alert('Синтез мовлення не підтримується у вашому браузері.');
-      }
-    }
-
-    async function sendMessage() {
-      const input = document.getElementById("userInput");
-      const messages = document.getElementById("messages");
-      const typing = document.getElementById("typing");
-      const message = input.value.trim();
-      if (!message) return;
-
-      messages.innerHTML += `<div class="message user">${message}</div>`;
-      input.value = "";
-      typing.style.display = 'block';
-      messages.scrollTop = messages.scrollHeight;
-
-      try {
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message })
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        typing.style.display = 'none';
-        const botMessage = `<div class="message bot">${data.reply}<button class="speak-button" onclick="speakMessage('${data.reply.replace(/'/g, "\\'")}')"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89 .86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button></div>`;
-        messages.innerHTML += botMessage;
-        if (data.image) {
-          messages.innerHTML += `<img src="${data.image}" alt="Схема підключення" loading="lazy">`;
-        }
-        messages.scrollTop = messages.scrollHeight;
-      } catch (error) {
-        typing.style.display = 'none';
-        messages.innerHTML += `<div class="message bot">Помилка: ${error.message}</div>`;
-      }
-    }
-  </script>
+    messages.scrollTop = messages.scrollHeight;
+  } catch (error) {
+    typing.style.display = 'none';
+    messages.innerHTML += `<div class="message bot">Помилка: ${error.message}</div>`;
+  }
+}
 </body>
 </html>
