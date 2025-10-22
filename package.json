@@ -15,26 +15,6 @@
     "express": "^4.18.2",
     "pdf-parse": "^1.1.1"
     "const NodeCache = require('node-cache');
-const cache = new NodeCache({ stdTTL: 600 }); // Кеш на 10 хвилин
-
-async function extractFromPDF(filePath, searchTerms) {
-  const cacheKey = `${filePath}-${searchTerms.join('-')}`;
-  const cached = cache.get(cacheKey);
-  if (cached) return cached;
-
-  console.log('Обробка PDF:', filePath, 'з термінами:', searchTerms);
-  try {
-    const dataBuffer = fs.readFileSync(filePath);
-    const data = await pdf(dataBuffer);
-    const text = data.text.toLowerCase();
-    const result = searchTerms.some(term => text.includes(term)) ? text.substring(0, 500) + '...' : 'Інформація відсутня в мануалах.';
-    cache.set(cacheKey, result);
-    return result;
-  } catch (err) {
-    console.error(`Помилка обробки PDF ${filePath}:`, err.message);
-    return 'Помилка обробки PDF.';
-  }
-}"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
