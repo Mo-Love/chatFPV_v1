@@ -14,7 +14,7 @@
     "@google/generative-ai": "^0.24.1",
     "express": "^4.18.2",
     "pdf-parse": "^1.1.1",
-    "node-cache": "^5.1.2" // Додано для кешу
+    "node-cache": "^5.1.2" // Прибери цей коментар
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
