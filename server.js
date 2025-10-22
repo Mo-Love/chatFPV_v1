@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const pdf = require('pdf-parse');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const NodeCache = require('node-cache'); // Додаємо node-cache
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -11,16 +12,26 @@ app.use(express.static(path.join(__dirname, '.')));
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+const cache = new NodeCache({ stdTTL: 600 }); // Ініціалізуємо кеш (10 хвилин)
 
 const SYSTEM_PROMPT = 'Ти — дружній експерт із FPV дронів, який допомагає користувачам із технічними питаннями щодо складання, налаштування та ремонту дронів. Використовуй інформацію з PDF-мануалів. Відповідай дружньо, з "Друже", коротко, чітко, українською, з абзацами та маркерами для читабельності. Якщо є схема, укажи її як [Схема: /images/назва.png].';
 
 async function extractFromPDF(filePath, searchTerms) {
+  const cacheKey = `${filePath}-${searchTerms.join('-')}`; // Унікальний ключ для кешу
+  const cached = cache.get(cacheKey);
+  if (cached) {
+    console.log('Використано кеш для:', filePath);
+    return cached;
+  }
+
   console.log('Обробка PDF:', filePath, 'з термінами:', searchTerms);
   try {
     const dataBuffer = fs.readFileSync(filePath);
     const data = await pdf(dataBuffer);
     const text = data.text.toLowerCase();
-    return searchTerms.some(term => text.includes(term)) ? text.substring(0, 500) + '...' : 'Інформація відсутня в мануалах.';
+    const result = searchTerms.some(term => text.includes(term)) ? text.substring(0, 500) + '...' : 'Інформація відсутня в мануалах.';
+    cache.set(cacheKey, result); // Зберігаємо результат у кеш
+    return result;
   } catch (err) {
     console.error(`Помилка обробки PDF ${filePath}:`, err.message);
     return 'Помилка обробки PDF.';
