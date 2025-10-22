@@ -47,11 +47,11 @@ app.post('/api/chat', async (req, res) => {
     if (fs.existsSync(manualsDir)) {
       const files = fs.readdirSync(manualsDir).filter(f => f.endsWith('.pdf'));
       console.log('Знайдені PDF:', files);
-      for (const file of files) {
-        const contexts = await Promise.all(files.map(file => extractFromPDF(path.join(manualsDir, file), searchTerms)));
-manualContext = contexts.filter(context => context !== 'Інформація відсутня в мануалах.').map((context, i) => `З ${files[i]}: ${context}\n`).join('');
-        }
-      }
+      const contexts = await Promise.all(files.map(file => extractFromPDF(path.join(manualsDir, file), searchTerms)));
+      manualContext = contexts
+        .filter(context => context !== 'Інформація відсутня в мануалах.' && context !== 'Помилка обробки PDF.')
+        .map((context, i) => `З ${files[i]}: ${context}\n`)
+        .join('');
     } else {
       console.warn('Папка /manuals/ не знайдена');
       manualContext += 'Папка з мануалами відсутня.\n';
