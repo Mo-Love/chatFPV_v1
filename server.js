@@ -48,9 +48,8 @@ app.post('/api/chat', async (req, res) => {
       const files = fs.readdirSync(manualsDir).filter(f => f.endsWith('.pdf'));
       console.log('Знайдені PDF:', files);
       for (const file of files) {
-        const context = await extractFromPDF(path.join(manualsDir, file), searchTerms);
-        if (context !== 'Інформація відсутня в мануалах.') {
-          manualContext += `З ${file}: ${context}\n`;
+        const contexts = await Promise.all(files.map(file => extractFromPDF(path.join(manualsDir, file), searchTerms)));
+manualContext = contexts.filter(context => context !== 'Інформація відсутня в мануалах.').map((context, i) => `З ${files[i]}: ${context}\n`).join('');
         }
       }
     } else {
