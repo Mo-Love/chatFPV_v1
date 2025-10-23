@@ -13,7 +13,7 @@ app.use(express.static(path.join(__dirname, '.')));
 
 // Ініціалізуємо Gemini з актуальною моделлю
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }); // Нова модель!
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', timeout: 10000 });
 
 // Базовий промпт (динамічна кількість мануалів)
 const BASE_SYSTEM_PROMPT = `Ти проста мовна модель ШІ для технічної підтримки FPV дронів. 
