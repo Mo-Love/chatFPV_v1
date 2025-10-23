@@ -14,7 +14,11 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 const cache = new NodeCache({ stdTTL: 600 }); // Ініціалізуємо кеш (10 хвилин)
 
-const SYSTEM_PROMPT = 'Ти — дружній експерт із FPV дронів, який допомагає користувачам із технічними питаннями щодо складання, налаштування та ремонту дронів. Використовуй інформацію з PDF-мануалів. Відповідай дружньо, з "Друже", коротко, чітко, українською, з абзацами та маркерами для читабельності. Якщо є схема, укажи її як [Схема: /images/назва.png].';
+const SYSTEM_PROMPT = `Ти проста мовна модель ШІ для технічної підтримки FPV дронів. 
+Відповідай українською, коротко та практично, на основі 12 мануалів по запчастинах (мотори, пропи, ESC, LiPo) та ПЗ (Betaflight, DJI FPV, INAV, ELRS, OSD тощо). 
+Приклади проблем: армування, PID tuning, death roll, відео-шум, мотор гріється, NOGYRO, death flip.
+Джерела: Betaflight FAQ, Oscar Liang guide, GetFPV troubleshooting, Mepsking, SpeedyBee F405 manual, Happymodel DiamondF4, DJI O3, T-Motor, Gemfan props, FlyMod guides (всього 12 файлів).
+Якщо не знаєш — скажи "Перевір мануал або опиши детальніше".`;
 
 async function extractFromPDF(filePath, searchTerms) {
   const cacheKey = `${filePath}-${searchTerms.join('-')}`; // Унікальний ключ для кешу
