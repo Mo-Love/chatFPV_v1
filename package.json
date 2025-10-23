@@ -19,6 +19,11 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
+  "dependencies": {
+  "express": "^4.18.2",
+  "@google/generative-ai": "^0.2.1",
+  "pdf-parse": "^1.1.1"  // Нова!
+},
   "author": "DroneSupport Team",
   "license": "MIT",
   "repository": {
