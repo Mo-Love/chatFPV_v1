@@ -39,7 +39,6 @@ async function loadManuals() {
       const dataBuffer = fs.readFileSync(path.join(manualsDir, file));
       const data = await pdf(dataBuffer);
       const text = data.text.substring(0, 2000);
-      // Генеруємо URL для файлу
       const url = `https://github.com/Mo-Love/chatFPV_v1/raw/main/manuals/${encodeURIComponent(file)}`;
       manuals.push({ name: file, text: text, url: url });
       console.log(`Завантажено: ${file} (${text.length} символів, URL: ${url})`);
@@ -90,12 +89,32 @@ app.post('/api/chat', async (req, res) => {
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     let text = response.text();
-    // Додаємо посилання до відповіді
     if (links) text += `\n\nДокладніше в мануалах:\n${links}`;
     res.json({ reply: text });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Помилка з Gemini API: ' + error.message });
+  }
+});
+
+// Новий ендпоінт для консолі
+app.get('/api/chat/console', (req, res) => {
+  try {
+    const consoleData = {
+      manualCount: manuals.length,
+      manuals: manuals.map(m => ({
+        name: m.name,
+        url: m.url,
+        textLength: m.text.length
+      })),
+      serverStatus: 'Running',
+      port: PORT,
+      timestamp: new Date().toISOString()
+    };
+    res.json(consoleData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Помилка консолі: ' + error.message });
   }
 });
 
