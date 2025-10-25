@@ -11,16 +11,16 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
-// Ініціалізуємо Gemini з актуальною моделлю
+// Ініціалізуємо Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', timeout: 10000 });
 
-// Базовий промпт (динамічна кількість мануалів)
+// Базовий промпт
 const BASE_SYSTEM_PROMPT = `Ти проста мовна модель ШІ для технічної підтримки FPV дронів. 
 Відповідай українською, коротко та практично, на основі всіх доступних мануалів по запчастинах (мотори, пропи, ESC, LiPo) та ПЗ (Betaflight, DJI FPV, INAV, ELRS, OSD тощо). 
 Приклади проблем: армування, PID tuning, death roll, відео-шум, мотор гріється, NOGYRO, death flip, binding RX.
 Джерела: Betaflight FAQ, Oscar Liang guide, GetFPV troubleshooting, Mepsking, SpeedyBee F405, Happymodel DiamondF4, DJI O3, T-Motor, Gemfan props, FlyMod guides та інші (всього %NUM_MANUALS% файлів).
-Використовуй наданий контекст з мануалів для точних відповідей. Якщо не знаєш — скажи "Перевір мануал або опиши детальніше".`;
+Використовуй наданий контекст з мануалів для точних відповідей. Якщо є релевантний мануал, додай посилання на нього. Якщо не знаєш — скажи "Перевір мануал або опиши детальніше".`;
 
 // Завантаження мануалів
 let manuals = [];
@@ -39,8 +39,10 @@ async function loadManuals() {
       const dataBuffer = fs.readFileSync(path.join(manualsDir, file));
       const data = await pdf(dataBuffer);
       const text = data.text.substring(0, 2000);
-      manuals.push({ name: file, text: text });
-      console.log(`Завантажено: ${file} (${text.length} символів)`);
+      // Генеруємо URL для файлу
+      const url = `https://github.com/Mo-Love/chatFPV_v1/raw/main/manuals/${encodeURIComponent(file)}`;
+      manuals.push({ name: file, text: text, url: url });
+      console.log(`Завантажено: ${file} (${text.length} символів, URL: ${url})`);
     } catch (err) {
       console.error(`Помилка парсингу ${file}:`, err);
     }
@@ -48,7 +50,7 @@ async function loadManuals() {
   return manuals;
 }
 
-// Простий пошук (ключові слова)
+// Пошук релевантного тексту
 function searchInManuals(query, topK = 3) {
   const keywords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
   let relevant = [];
@@ -62,7 +64,10 @@ function searchInManuals(query, topK = 3) {
   }
 
   relevant.sort((a, b) => b.score - a.score);
-  return relevant.slice(0, topK).map(m => `З мануалу "${m.name}" (score ${m.score}): ${m.text.substring(0, 500)}...`).join('\n');
+  return relevant.slice(0, topK).map(m => ({
+    text: `З мануалу "${m.name}" (score ${m.score}): ${m.text.substring(0, 500)}...`,
+    url: m.url
+  }));
 }
 
 // Головна сторінка
@@ -77,12 +82,16 @@ app.post('/api/chat', async (req, res) => {
 
   try {
     const systemPrompt = BASE_SYSTEM_PROMPT.replace('%NUM_MANUALS%', manuals.length.toString());
-    const context = searchInManuals(message);
+    const relevantManuals = searchInManuals(message);
+    const context = relevantManuals.map(m => m.text).join('\n');
+    const links = relevantManuals.map(m => `[${m.text.split('"')[1]}](${m.url})`).join('\n');
     const fullPrompt = systemPrompt + (context ? `\n\nРелевантний контекст з мануалів:\n${context}` : '\n\nКонтекст відсутній — використовуй загальні знання.') + `\n\nКористувач: ${message}`;
 
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
-    const text = response.text();
+    let text = response.text();
+    // Додаємо посилання до відповіді
+    if (links) text += `\n\nДокладніше в мануалах:\n${links}`;
     res.json({ reply: text });
   } catch (error) {
     console.error(error);
