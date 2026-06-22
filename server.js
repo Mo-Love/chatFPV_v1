@@ -13,7 +13,7 @@ app.use(express.static(path.join(__dirname, '.')));
 
 // Ініціалізуємо Gemini з таймаутом для стабільності на Render
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', timeout: 15000 });
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', timeout: 15000 });
 
 // Базовий промпт для ШІ
 const BASE_SYSTEM_PROMPT = `Ти проста мовна модель ШІ для технічної підтримки FPV дронів. 
