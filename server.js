@@ -11,9 +11,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
-// Ініціалізуємо Gemini
+// Ініціалізуємо Gemini (Змінено модель на 1.5-flash для обходу блокування Render)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', timeout: 10000 });
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', timeout: 15000 });
 
 // Базовий промпт
 const BASE_SYSTEM_PROMPT = `Ти проста мовна модель ШІ для технічної підтримки FPV дронів. 
