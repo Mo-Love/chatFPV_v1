@@ -11,19 +11,20 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
-// Ініціалізуємо Gemini (Змінено модель на 1.5-flash для обходу блокування Render)
+// Ініціалізуємо Gemini з таймаутом для стабільності на Render
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', timeout: 15000 });
 
-// Базовий промпт
+// Базовий промпт для ШІ
 const BASE_SYSTEM_PROMPT = `Ти проста мовна модель ШІ для технічної підтримки FPV дронів. 
 Відповідай українською, коротко та практично, на основі всіх доступних мануалів по запчастинах (мотори, пропи, ESC, LiPo) та ПЗ (Betaflight, DJI FPV, INAV, ELRS, OSD тощо). 
 Приклади проблем: армування, PID tuning, death roll, відео-шум, мотор гріється, NOGYRO, death flip, binding RX.
 Джерела: Betaflight FAQ, Oscar Liang guide, GetFPV troubleshooting, Mepsking, SpeedyBee F405, Happymodel DiamondF4, DJI O3, T-Motor, Gemfan props, FlyMod guides та інші (всього %NUM_MANUALS% файлів).
 Використовуй наданий контекст з мануалів для точних відповідей. Якщо є релевантний мануал, додай посилання на нього. Якщо не знаєш — скажи "Перевір мануал або опиши детальніше".`;
 
-// Завантаження мануалів
+// База даних мануалів у пам'яті сервера
 let manuals = [];
+
 async function loadManuals() {
   const manualsDir = './manuals';
   if (!fs.existsSync(manualsDir)) {
@@ -38,8 +39,11 @@ async function loadManuals() {
     try {
       const dataBuffer = fs.readFileSync(path.join(manualsDir, file));
       const data = await pdf(dataBuffer);
-      const text = data.text.substring(0, 2000);
+      
+      // Беремо перші 2000 символів для контексту
+      const text = data.text.substring(0, 2000); 
       const url = `https://github.com/Mo-Love/chatFPV_v1/raw/main/manuals/${encodeURIComponent(file)}`;
+      
       manuals.push({ name: file, text: text, url: url });
       console.log(`Завантажено: ${file} (${text.length} символів, URL: ${url})`);
     } catch (err) {
@@ -49,7 +53,7 @@ async function loadManuals() {
   return manuals;
 }
 
-// Пошук релевантного тексту
+// Пошук релевантного тексту за ключовими словами
 function searchInManuals(query, topK = 3) {
   const keywords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
   let relevant = [];
@@ -63,18 +67,20 @@ function searchInManuals(query, topK = 3) {
   }
 
   relevant.sort((a, b) => b.score - a.score);
+  
   return relevant.slice(0, topK).map(m => ({
+    name: m.name,
     text: `З мануалу "${m.name}" (score ${m.score}): ${m.text.substring(0, 500)}...`,
     url: m.url
   }));
 }
 
-// Головна сторінка
+// Головна сторінка сайту
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// API для чату
+// API Ендпоінт для чату
 app.post('/api/chat', async (req, res) => {
   const { message } = req.body;
   if (!message) return res.status(400).json({ error: 'Повідомлення порожнє' });
@@ -82,14 +88,22 @@ app.post('/api/chat', async (req, res) => {
   try {
     const systemPrompt = BASE_SYSTEM_PROMPT.replace('%NUM_MANUALS%', manuals.length.toString());
     const relevantManuals = searchInManuals(message);
+    
     const context = relevantManuals.map(m => m.text).join('\n');
-    const links = relevantManuals.map(m => `[${m.text.split('"')[1]}](${m.url})`).join('\n');
-    const fullPrompt = systemPrompt + (context ? `\n\nРелевантний контекст з мануалів:\n${context}` : '\n\nКонтекст відсутній — використовуй загальні знання.') + `\n\nКористувач: ${message}`;
+    const links = relevantManuals.map(m => `[${m.name}](${m.url})`).join('\n');
+    
+    const fullPrompt = systemPrompt + 
+      (context ? `\n\nРелевантний контекст з мануалів:\n${context}` : '\n\nКонтекст відсутній — використовуй загальні знання.') + 
+      `\n\nКористувач: ${message}`;
 
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     let text = response.text();
-    if (links) text += `\n\nДокладніше в мануалах:\n${links}`;
+    
+    if (links) {
+      text += `\n\nДокладніше в мануалах:\n${links}`;
+    }
+    
     res.json({ reply: text });
   } catch (error) {
     console.error(error);
@@ -97,7 +111,7 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// Новий ендпоінт для консолі
+// Ендпоінт для моніторингу консолі
 app.get('/api/chat/console', (req, res) => {
   try {
     const consoleData = {
@@ -118,9 +132,9 @@ app.get('/api/chat/console', (req, res) => {
   }
 });
 
-// Старт сервера
+// Старт сервера після завантаження всіх PDF
 loadManuals().then(() => {
   app.listen(PORT, () => {
-    console.log(`Сервер на http://localhost:${PORT}. Завантажено ${manuals.length} мануалів.`);
+    console.log(`Сервер запущено на порту ${PORT}. База даних мануалів готова.`);
   });
 });
